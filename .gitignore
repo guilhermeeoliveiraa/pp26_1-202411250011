@@ -1,0 +1,75 @@
+# =========================
+# Compilados Java
+# =========================
+*.class
+
+# arquivos JAR/WAR gerados
+*.jar
+*.war
+*.ear
+
+# =========================
+# Mavens
+# =========================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# =========================
+# Gradle
+# =========================
+.gradle/
+build/
+out/
+
+# =========================
+# IntelliJ IDEA
+# =========================
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# =========================
+# Eclipse
+# =========================
+.project
+.classpath
+.settings/
+
+# =========================
+# NetBeans
+# =========================
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+
+# =========================
+# Logs e arquivos temporários
+# =========================
+*.log
+*.tmp
+*.swp
+
+# =========================
+# Sistema operacional
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Cobertura de testes
+# =========================
+coverage/
+*.exec
+*.lcov
+
+# =========================
+# VS Code (opcional)
+# =========================
+.vscode/
