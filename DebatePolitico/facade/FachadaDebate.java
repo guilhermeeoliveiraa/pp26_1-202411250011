@@ -7,8 +7,11 @@ import debate.Inquiridor;
 import debate.MediadorBase;
 import debate.MediarDebate;
 import log.LogSistem;
+import notificacao.Eleitor;
+import notificacao.EleitorBuilder;
 
 public class FachadaDebate {
+
     private static FachadaDebate instance;
 
     private ConfiguraTempo config;
@@ -17,6 +20,7 @@ public class FachadaDebate {
     private LogSistem log;
 
     private FachadaDebate() {
+
         config = new ConfiguraTempo();
         mediador = new MediarDebate();
         gerenciador = new GerenciaPolitico();
@@ -24,9 +28,11 @@ public class FachadaDebate {
     }
 
     public static FachadaDebate getInstance() {
+
         if (instance == null) {
             instance = new FachadaDebate();
         }
+
         return instance;
     }
 
@@ -34,39 +40,83 @@ public class FachadaDebate {
         return mediador;
     }
 
-    public void configuracao(int pergunta, int resposta, int replica, int treplica) {
+    public void configuracao(
+        int pergunta,
+        int resposta,
+        int replica,
+        int treplica
+    ) {
+
         config.setTempoPergunta(pergunta);
         config.setTempoResposta(resposta);
         config.setTempoReplica(replica);
         config.setTempoTreplica(treplica);
 
-        log.registerLog("Tempos do debate configurados.");
+        log.registerLog(
+            "Tempos do debate configurados."
+        );
     }
 
-    public void cadastrarPoliticos(String nome, String partido, MediadorBase mediador) {
-        gerenciador.criarPolitico(nome, partido, mediador);
-        log.registerLog("Político " + nome + " do partido " + partido + " cadastrado.");
-    }
+    public void cadastrarPoliticos(
+        String nome,
+        String partido,
+        MediadorBase mediador
+    ) {
 
-    public void cadastrarEleitor(String nomeEleitor, String email, String nomePolitico) {
-        ColaboradorPolitico p = gerenciador.obterPolitico(nomePolitico);
-
-        if (p == null) {
-            throw new IllegalArgumentException("Político não encontrado.");
-        }
-
-        p.adicionar(new notificacao.Eleitor(email));
+        gerenciador.criarPolitico(
+            nome,
+            partido,
+            mediador
+        );
 
         log.registerLog(
-            "Eleitor " + nomeEleitor +
-            " (" + email + ") cadastrado para " +
-            nomePolitico
+            "Político "
+            + nome
+            + " do partido "
+            + partido
+            + " cadastrado."
+        );
+    }
+
+    public void cadastrarEleitor(
+        String nomeEleitor,
+        String email,
+        String nomePolitico
+    ) {
+
+        ColaboradorPolitico p =
+            gerenciador.obterPolitico(nomePolitico);
+
+        if (p == null) {
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        Eleitor eleitor =
+            new EleitorBuilder()
+                .email(email)
+                .build();
+
+        p.adicionar(eleitor);
+
+        log.registerLog(
+            "Eleitor "
+            + nomeEleitor
+            + " ("
+            + email
+            + ") cadastrado para "
+            + nomePolitico
         );
     }
 
     public void sorteioInquiridor() {
-        ColaboradorPolitico escolhido = gerenciador.sortearPolitico();
-        ((MediarDebate) mediador).setInquiridor(escolhido);
+
+        ColaboradorPolitico escolhido =
+            gerenciador.sortearPolitico();
+
+        ((MediarDebate) mediador)
+            .setInquiridor(escolhido);
 
         log.registerLog(
             "Inquiridor sorteado: "
@@ -78,6 +128,7 @@ public class FachadaDebate {
     }
 
     public void escolherInquirido(String nome) {
+
         ColaboradorPolitico escolhido =
             gerenciador.obterPolitico(nome);
 
@@ -88,7 +139,8 @@ public class FachadaDebate {
         }
 
         Inquiridor inquiridor =
-            ((MediarDebate) mediador).getInquiridor();
+            ((MediarDebate) mediador)
+                .getInquiridor();
 
         if (inquiridor == null) {
             throw new IllegalStateException(
@@ -118,12 +170,16 @@ public class FachadaDebate {
     }
 
     public void acessarLog() {
-        System.out.println(log.getLogsRegister());
+        System.out.println(
+            log.getLogsRegister()
+        );
     }
 
     public ColaboradorPolitico getPoliticoInquiridor() {
+
         Inquiridor inquiridor =
-            ((MediarDebate) mediador).getInquiridor();
+            ((MediarDebate) mediador)
+                .getInquiridor();
 
         if (inquiridor == null) {
             return null;

@@ -1,6 +1,9 @@
 package configuracao;
 
-public class ConfiguraTempo {
+import prototype.Prototype;
+
+public class ConfiguraTempo implements Prototype {
+
     private int tempoPergunta;
     private int tempoResposta;
     private int tempoReplica;
@@ -43,5 +46,19 @@ public class ConfiguraTempo {
 
     public int getTempoTreplica() {
         return tempoTreplica;
+    }
+
+    @Override
+    public ConfiguraTempo clone() {
+
+        ConfiguraTempo copia =
+            new ConfiguraTempo();
+
+        copia.setTempoPergunta(tempoPergunta);
+        copia.setTempoResposta(tempoResposta);
+        copia.setTempoReplica(tempoReplica);
+        copia.setTempoTreplica(tempoTreplica);
+
+        return copia;
     }
 }

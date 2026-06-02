@@ -1,7 +1,9 @@
 Main.java
 configuracao\ConfiguraTempo.java
+configuracao\ConfiguraTempoBuilder.java
 configuracao\GerenciaPolitico.java
 debate\ColaboradorPolitico.java
+debate\ColaboradorPoliticoBuilder.java
 debate\Inquirido.java
 debate\Inquiridor.java
 debate\MediadorBase.java
@@ -10,7 +12,9 @@ debate\Microfone.java
 facade\FachadaDebate.java
 log\LogSistem.java
 notificacao\Eleitor.java
+notificacao\EleitorBuilder.java
 notificacao\Observador.java
 notificacao\Sujeito.java
+prototype\Prototype.java
 usuario\CLI.java
 usuario\GUI.java

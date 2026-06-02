@@ -1,8 +1,10 @@
 package debate;
 
 import notificacao.Sujeito;
+import prototype.Prototype;
 
-public class ColaboradorPolitico extends Sujeito {
+public class ColaboradorPolitico extends Sujeito implements Prototype {
+
     private String nome;
     private String partido;
     private boolean foiInquiridor;
@@ -20,8 +22,16 @@ public class ColaboradorPolitico extends Sujeito {
         notificar(nome);
     }
 
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
     public String getNome() {
         return nome;
+    }
+
+    public void setPartido(String partido) {
+        this.partido = partido;
     }
 
     public String getPartido() {
@@ -46,6 +56,17 @@ public class ColaboradorPolitico extends Sujeito {
 
     public Microfone getMicrofone() {
         return microfone;
+    }
+
+    @Override
+    public ColaboradorPolitico clone() {
+        ColaboradorPolitico copia =
+            new ColaboradorPolitico(nome, partido);
+
+        copia.setInquiridor(foiInquiridor);
+        copia.setMediador(mediador);
+
+        return copia;
     }
 
     @Override

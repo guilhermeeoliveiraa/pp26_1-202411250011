@@ -3,45 +3,79 @@ package debate;
 import log.LogSistem;
 
 public class Inquiridor {
+
     private ColaboradorPolitico politico;
 
-    public Inquiridor(ColaboradorPolitico politico) {
+    public Inquiridor(
+        ColaboradorPolitico politico
+    ) {
         this.politico = politico;
     }
 
-    public void escolhaInquirido(ColaboradorPolitico p) {
-        MediarDebate mediador = (MediarDebate) getPoliticoMediator();
+    public void escolhaInquirido(
+        ColaboradorPolitico p
+    ) {
+
+        MediarDebate mediador =
+            (MediarDebate) getPoliticoMediator();
+
         mediador.setInquirido(p);
     }
 
     private MediadorBase getPoliticoMediator() {
-        try {
-            var field = ColaboradorPolitico.class.getDeclaredField("mediador");
-            field.setAccessible(true);
-            return (MediadorBase) field.get(politico);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return politico.getMediador();
     }
 
-    public void perguntar(int tempo, LogSistem log) {
+    public void perguntar(
+        int tempo,
+        LogSistem log
+    ) {
+
         politico.operacaoMediada();
-        Microfone m = politico.getMicrofone();
+
+        Microfone m =
+            politico.getMicrofone();
+
         m.liga();
-        log.registerLog("Pergunta iniciada por " + politico.getNome());
+
+        log.registerLog(
+            "Pergunta iniciada por "
+            + politico.getNome()
+        );
+
         m.passaTempo(tempo);
+
         m.desliga();
-        log.registerLog("Tempo de pergunta finalizado.");
+
+        log.registerLog(
+            "Tempo de pergunta finalizado."
+        );
     }
 
-    public void replica(int tempo, LogSistem log) {
+    public void replica(
+        int tempo,
+        LogSistem log
+    ) {
+
         politico.operacaoMediada();
-        Microfone m = politico.getMicrofone();
+
+        Microfone m =
+            politico.getMicrofone();
+
         m.liga();
-        log.registerLog("Réplica iniciada por " + politico.getNome());
+
+        log.registerLog(
+            "Réplica iniciada por "
+            + politico.getNome()
+        );
+
         m.passaTempo(tempo);
+
         m.desliga();
-        log.registerLog("Tempo de réplica finalizado.");
+
+        log.registerLog(
+            "Tempo de réplica finalizado."
+        );
     }
 
     public ColaboradorPolitico getPolitico() {

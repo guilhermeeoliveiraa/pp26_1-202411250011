@@ -1,6 +1,7 @@
 package debate;
 
 public class Microfone {
+
     private boolean microAtivo;
 
     public Microfone() {
@@ -15,6 +16,10 @@ public class Microfone {
     public void desliga() {
         microAtivo = false;
         System.out.println("Microfone Desligado.");
+    }
+
+    public boolean estaAtivo() {
+        return microAtivo;
     }
 
     public void passaTempo(int tempo) {
