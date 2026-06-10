@@ -11,11 +11,19 @@ public class ColaboradorPolitico extends Sujeito implements Prototype {
     private Microfone microfone;
     private MediadorBase mediador;
 
-    public ColaboradorPolitico(String nome, String partido) {
+    public ColaboradorPolitico(
+        String nome,
+        String partido
+    ) {
+
         this.nome = nome;
+
         this.partido = partido;
+
         this.foiInquiridor = false;
-        this.microfone = new Microfone();
+
+        this.microfone =
+            new Microfone();
     }
 
     public void operacaoMediada() {
@@ -56,6 +64,10 @@ public class ColaboradorPolitico extends Sujeito implements Prototype {
 
     public Microfone getMicrofone() {
         return microfone;
+    }
+
+    public void setMicrofone(Microfone microfone) {
+        this.microfone = microfone;
     }
 
     @Override

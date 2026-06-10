@@ -160,48 +160,124 @@ private void cadastrarEleitor() {
     }
 
     private void executarDebate() {
+
         try {
+
             debate.MediarDebate mediador =
-                (debate.MediarDebate) f.getMediador();
+                (debate.MediarDebate)
+                    f.getMediador();
 
-            debate.Inquiridor inquiridor = mediador.getInquiridor();
-            debate.Inquirido inquirido = mediador.getInquirido();
+            debate.Inquiridor inquiridor =
+                mediador.getInquiridor();
 
-            if (inquiridor == null || inquirido == null) {
+            debate.Inquirido inquirido =
+                mediador.getInquirido();
+
+            if (
+                inquiridor == null
+                ||
+                inquirido == null
+            ) {
+
                 System.out.println(
                     "Erro: Inquiridor ou inquirido não foram definidos."
                 );
+
                 return;
             }
 
-            String nomeInquiridor = inquiridor.getPolitico().getNome();
-            String nomeInquirido = inquirido.getPolitico().getNome();
+            String nomeInquiridor =
+                inquiridor
+                    .getPolitico()
+                    .getNome();
 
-            System.out.println("\n========== INÍCIO DO DEBATE ==========\n");
-
-            System.out.println(
-                nomeInquiridor + " está fazendo a PERGUNTA."
-            );
-            inquiridor.perguntar(0, log.LogSistem.getInstance("log/debate.log"));
-
-            System.out.println(
-                nomeInquirido + " está fazendo a RESPOSTA."
-            );
-            inquirido.responder(0, log.LogSistem.getInstance("log/debate.log"));
+            String nomeInquirido =
+                inquirido
+                    .getPolitico()
+                    .getNome();
 
             System.out.println(
-                nomeInquiridor + " está fazendo a RÉPLICA."
+                "\n========== INÍCIO DO DEBATE ==========\n"
             );
-            inquiridor.replica(0, log.LogSistem.getInstance("log/debate.log"));
 
             System.out.println(
-                nomeInquirido + " está fazendo a TRÉPLICA."
+                nomeInquiridor
+                + " está fazendo a PERGUNTA."
             );
-            inquirido.treplica(0, log.LogSistem.getInstance("log/debate.log"));
 
-            System.out.println("\n=========== FIM DO DEBATE ===========");
-        } catch (Exception e) {
-            System.out.println("Erro: " + e.getMessage());
+            inquiridor.perguntar(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                nomeInquirido
+                + " está fazendo a RESPOSTA."
+            );
+
+            inquirido.responder(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                nomeInquiridor
+                + " está fazendo a RÉPLICA."
+            );
+
+            inquiridor.replica(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                nomeInquirido
+                + " está fazendo a TRÉPLICA."
+            );
+
+            inquirido.treplica(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                "\n=========== FIM DO DEBATE ==========="
+            );
+
+            System.out.println(
+                "\nAnalisando solicitações de Direito de Resposta..."
+            );
+
+            f.getGerenciadorEstado()
+                .avaliarSolicitacoes();
+
+            f.getGerenciadorEstado()
+                .executarDireitosResposta();
+
+        }
+
+        catch (Exception e) {
+
+            System.out.println(
+                "Erro: "
+                + e.getMessage()
+            );
         }
     }
 
@@ -235,6 +311,47 @@ private void cadastrarEleitor() {
                 return valor;
             } catch (NumberFormatException e) {
                 System.out.println("Digite um número inteiro válido.");
+            }
+        }
+    }
+
+    private void verificarSolicitacoesDR() {
+
+        while (true) {
+
+            System.out.print(
+                "\nAlguém apertou o botão DR? (ENTER = não, s = sim): "
+            );
+
+            String resposta =
+                scanner.nextLine();
+
+            if (resposta.isBlank()) {
+                break;
+            }
+
+            if (
+                resposta.equalsIgnoreCase("s")
+            ) {
+
+                System.out.print(
+                    "Nome do político: "
+                );
+
+                String nome =
+                    scanner.nextLine();
+
+                try {
+
+                    f.solicitarDR(nome);
+
+                } catch (Exception e) {
+
+                    System.out.println(
+                        "Erro: "
+                        + e.getMessage()
+                    );
+                }
             }
         }
     }

@@ -8,37 +8,63 @@ public class ColaboradorPoliticoBuilder {
     private Microfone microfone;
     private MediadorBase mediador;
 
-    public ColaboradorPoliticoBuilder nome(String nome) {
+    public ColaboradorPoliticoBuilder nome(
+        String nome
+    ) {
         this.nome = nome;
         return this;
     }
 
-    public ColaboradorPoliticoBuilder partido(String partido) {
+    public ColaboradorPoliticoBuilder partido(
+        String partido
+    ) {
         this.partido = partido;
         return this;
     }
 
-    public ColaboradorPoliticoBuilder inquiridor(boolean valor) {
+    public ColaboradorPoliticoBuilder inquiridor(
+        boolean valor
+    ) {
         this.inquiridor = valor;
         return this;
     }
 
-    public ColaboradorPoliticoBuilder microfone(Microfone microfone) {
+    public ColaboradorPoliticoBuilder microfone(
+        Microfone microfone
+    ) {
         this.microfone = microfone;
         return this;
     }
 
-    public ColaboradorPoliticoBuilder mediador(MediadorBase mediador) {
+    public ColaboradorPoliticoBuilder mediador(
+        MediadorBase mediador
+    ) {
         this.mediador = mediador;
         return this;
     }
 
     public ColaboradorPolitico build() {
-        ColaboradorPolitico p =
-            new ColaboradorPolitico(nome, partido);
 
-        p.setInquiridor(inquiridor);
-        p.setMediador(mediador);
+        ColaboradorPolitico p =
+            new ColaboradorPolitico(
+                nome,
+                partido
+            );
+
+        p.setInquiridor(
+            inquiridor
+        );
+
+        p.setMediador(
+            mediador
+        );
+
+        if (microfone != null) {
+
+            p.setMicrofone(
+                microfone
+            );
+        }
 
         return p;
     }

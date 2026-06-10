@@ -9,35 +9,64 @@ import debate.MediarDebate;
 import log.LogSistem;
 import notificacao.Eleitor;
 import notificacao.EleitorBuilder;
+import state.GerenciadorEstadoDebate;
 
 public class FachadaDebate {
 
     private static FachadaDebate instance;
 
     private ConfiguraTempo config;
+
     private MediadorBase mediador;
+
     private GerenciaPolitico gerenciador;
+
+    private GerenciadorEstadoDebate gerenciadorEstado;
+
     private LogSistem log;
 
     private FachadaDebate() {
 
-        config = new ConfiguraTempo();
-        mediador = new MediarDebate();
-        gerenciador = new GerenciaPolitico();
-        log = LogSistem.getInstance("log/debate.log");
+        config =
+            new ConfiguraTempo();
+
+        gerenciador =
+            new GerenciaPolitico();
+
+        gerenciadorEstado =
+            new GerenciadorEstadoDebate();
+
+        mediador =
+            new MediarDebate(
+                gerenciadorEstado
+            );
+
+        log =
+            LogSistem.getInstance(
+                "log/debate.log"
+            );
     }
 
     public static FachadaDebate getInstance() {
 
         if (instance == null) {
-            instance = new FachadaDebate();
+
+            instance =
+                new FachadaDebate();
         }
 
         return instance;
     }
 
     public MediadorBase getMediador() {
+
         return mediador;
+    }
+
+    public GerenciadorEstadoDebate
+        getGerenciadorEstado() {
+
+        return gerenciadorEstado;
     }
 
     public void configuracao(
@@ -47,13 +76,24 @@ public class FachadaDebate {
         int treplica
     ) {
 
-        config.setTempoPergunta(pergunta);
-        config.setTempoResposta(resposta);
-        config.setTempoReplica(replica);
-        config.setTempoTreplica(treplica);
+        config.setTempoPergunta(
+            pergunta
+        );
+
+        config.setTempoResposta(
+            resposta
+        );
+
+        config.setTempoReplica(
+            replica
+        );
+
+        config.setTempoTreplica(
+            treplica
+        );
 
         log.registerLog(
-            "Tempos do debate configurados."
+            "Tempos configurados."
         );
     }
 
@@ -70,11 +110,8 @@ public class FachadaDebate {
         );
 
         log.registerLog(
-            "Político "
+            "Político cadastrado: "
             + nome
-            + " do partido "
-            + partido
-            + " cadastrado."
         );
     }
 
@@ -84,10 +121,14 @@ public class FachadaDebate {
         String nomePolitico
     ) {
 
-        ColaboradorPolitico p =
-            gerenciador.obterPolitico(nomePolitico);
+        ColaboradorPolitico politico =
+            gerenciador
+                .obterPolitico(
+                    nomePolitico
+                );
 
-        if (p == null) {
+        if (politico == null) {
+
             throw new IllegalArgumentException(
                 "Político não encontrado."
             );
@@ -98,41 +139,47 @@ public class FachadaDebate {
                 .email(email)
                 .build();
 
-        p.adicionar(eleitor);
+        politico.adicionar(
+            eleitor
+        );
 
         log.registerLog(
             "Eleitor "
             + nomeEleitor
-            + " ("
-            + email
-            + ") cadastrado para "
+            + " cadastrado para "
             + nomePolitico
         );
     }
 
     public void sorteioInquiridor() {
 
-        ColaboradorPolitico escolhido =
-            gerenciador.sortearPolitico();
+        ColaboradorPolitico sorteado =
+            gerenciador
+                .sortearPolitico();
 
         ((MediarDebate) mediador)
-            .setInquiridor(escolhido);
+            .setInquiridor(
+                sorteado
+            );
 
         log.registerLog(
             "Inquiridor sorteado: "
-            + escolhido.getNome()
-            + " ("
-            + escolhido.getPartido()
-            + ")"
+            + sorteado.getNome()
         );
     }
 
-    public void escolherInquirido(String nome) {
+    public void escolherInquirido(
+        String nome
+    ) {
 
         ColaboradorPolitico escolhido =
-            gerenciador.obterPolitico(nome);
+            gerenciador
+                .obterPolitico(
+                    nome
+                );
 
         if (escolhido == null) {
+
             throw new IllegalArgumentException(
                 "Político não encontrado."
             );
@@ -143,36 +190,73 @@ public class FachadaDebate {
                 .getInquiridor();
 
         if (inquiridor == null) {
+
             throw new IllegalStateException(
                 "Nenhum inquiridor foi sorteado."
             );
         }
 
-        if (inquiridor.getPolitico() == escolhido) {
+        if (
+            inquiridor
+                .getPolitico()
+                .equals(escolhido)
+        ) {
+
             throw new IllegalArgumentException(
                 "O inquiridor não pode escolher a si mesmo."
             );
         }
 
-        inquiridor.escolhaInquirido(escolhido);
+        inquiridor.escolhaInquirido(
+            escolhido
+        );
 
         log.registerLog(
             "Inquirido escolhido: "
             + escolhido.getNome()
-            + " ("
-            + escolhido.getPartido()
-            + ")"
         );
     }
 
     public void executaDebate() {
-        mediador.debate(config, log);
+
+        mediador.debate(
+            config,
+            log
+        );
     }
 
-    public void acessarLog() {
-        System.out.println(
-            log.getLogsRegister()
-        );
+    public void solicitarDR(
+        String nomePolitico
+    ) {
+
+        ColaboradorPolitico politico =
+            gerenciador
+                .obterPolitico(
+                    nomePolitico
+                );
+
+        if (politico == null) {
+
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        politico
+            .getMicrofone()
+            .pressionarDR(
+                politico
+            );
+    }
+
+    public ColaboradorPolitico getPolitico(
+        String nome
+    ) {
+
+        return gerenciador
+            .obterPolitico(
+                nome
+            );
     }
 
     public ColaboradorPolitico getPoliticoInquiridor() {
@@ -182,9 +266,18 @@ public class FachadaDebate {
                 .getInquiridor();
 
         if (inquiridor == null) {
+
             return null;
         }
 
-        return inquiridor.getPolitico();
+        return inquiridor
+            .getPolitico();
+    }
+
+    public void acessarLog() {
+
+        System.out.println(
+            log.getLogsRegister()
+        );
     }
 }

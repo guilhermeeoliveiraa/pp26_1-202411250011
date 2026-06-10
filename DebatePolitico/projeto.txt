@@ -1,0 +1,3596 @@
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\Main.java ====================
+import usuario.CLI;
+
+public class Main {
+    public static void main(String[] args) {
+        CLI cli = new CLI();
+        cli.realizarOperacao();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\configuracao\ConfiguraTempo.java ====================
+package configuracao;
+
+import prototype.Prototype;
+
+public class ConfiguraTempo implements Prototype {
+
+    private int tempoPergunta;
+    private int tempoResposta;
+    private int tempoReplica;
+    private int tempoTreplica;
+
+    public ConfiguraTempo() {
+        tempoPergunta = 120;
+        tempoResposta = 90;
+        tempoReplica = 60;
+        tempoTreplica = 60;
+    }
+
+    public void setTempoPergunta(int t) {
+        tempoPergunta = t;
+    }
+
+    public int getTempoPergunta() {
+        return tempoPergunta;
+    }
+
+    public void setTempoResposta(int t) {
+        tempoResposta = t;
+    }
+
+    public int getTempoResposta() {
+        return tempoResposta;
+    }
+
+    public void setTempoReplica(int t) {
+        tempoReplica = t;
+    }
+
+    public int getTempoReplica() {
+        return tempoReplica;
+    }
+
+    public void setTempoTreplica(int t) {
+        tempoTreplica = t;
+    }
+
+    public int getTempoTreplica() {
+        return tempoTreplica;
+    }
+
+    @Override
+    public ConfiguraTempo clone() {
+
+        ConfiguraTempo copia =
+            new ConfiguraTempo();
+
+        copia.setTempoPergunta(tempoPergunta);
+        copia.setTempoResposta(tempoResposta);
+        copia.setTempoReplica(tempoReplica);
+        copia.setTempoTreplica(tempoTreplica);
+
+        return copia;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\configuracao\ConfiguraTempoBuilder.java ====================
+package configuracao;
+
+public class ConfiguraTempoBuilder {
+
+    private int tempoPergunta;
+    private int tempoResposta;
+    private int tempoReplica;
+    private int tempoTreplica;
+
+    public ConfiguraTempoBuilder tempoPergunta(int tempo) {
+        this.tempoPergunta = tempo;
+        return this;
+    }
+
+    public ConfiguraTempoBuilder tempoResposta(int tempo) {
+        this.tempoResposta = tempo;
+        return this;
+    }
+
+    public ConfiguraTempoBuilder tempoReplica(int tempo) {
+        this.tempoReplica = tempo;
+        return this;
+    }
+
+    public ConfiguraTempoBuilder tempoTreplica(int tempo) {
+        this.tempoTreplica = tempo;
+        return this;
+    }
+
+    public ConfiguraTempo build() {
+
+        ConfiguraTempo c = new ConfiguraTempo();
+
+        c.setTempoPergunta(tempoPergunta);
+        c.setTempoResposta(tempoResposta);
+        c.setTempoReplica(tempoReplica);
+        c.setTempoTreplica(tempoTreplica);
+
+        return c;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\configuracao\GerenciaPolitico.java ====================
+package configuracao;
+
+import debate.ColaboradorPolitico;
+import debate.ColaboradorPoliticoBuilder;
+import debate.MediadorBase;
+import notificacao.Eleitor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class GerenciaPolitico {
+
+    private List<ColaboradorPolitico> politicos = new ArrayList<>();
+    private int quantPoliticos = 0;
+
+    public void criarPolitico(
+        String nome,
+        String partido,
+        MediadorBase mediador
+    ) {
+
+        ColaboradorPolitico novo =
+            new ColaboradorPoliticoBuilder()
+                .nome(nome)
+                .partido(partido)
+                .mediador(mediador)
+                .build();
+
+        politicos.add(novo);
+        quantPoliticos++;
+    }
+
+    public void adicionarEleitor(
+        String nome,
+        String partido,
+        Eleitor eleitor
+    ) {
+
+        ColaboradorPolitico p = obterPolitico(nome);
+
+        if (p == null) {
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        p.adicionar(eleitor);
+    }
+
+    public ColaboradorPolitico obterPolitico(String nome) {
+
+        for (ColaboradorPolitico p : politicos) {
+            if (p.getNome().equals(nome)) {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    public ColaboradorPolitico sortearPolitico() {
+
+        if (politicos.isEmpty()) {
+            throw new IllegalStateException(
+                "Nenhum político cadastrado."
+            );
+        }
+
+        List<ColaboradorPolitico> disponiveis =
+            new ArrayList<>();
+
+        for (ColaboradorPolitico p : politicos) {
+            if (!p.getInquiridor()) {
+                disponiveis.add(p);
+            }
+        }
+
+        if (disponiveis.isEmpty()) {
+            throw new IllegalStateException(
+                "Todos os políticos já foram inquiridores."
+            );
+        }
+
+        Random random = new Random();
+
+        ColaboradorPolitico escolhido =
+            disponiveis.get(
+                random.nextInt(disponiveis.size())
+            );
+
+        escolhido.setInquiridor(true);
+
+        return escolhido;
+    }
+
+    public int getQuantPoliticos() {
+        return quantPoliticos;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\ColaboradorPolitico.java ====================
+package debate;
+
+import notificacao.Sujeito;
+import prototype.Prototype;
+
+public class ColaboradorPolitico extends Sujeito implements Prototype {
+
+    private String nome;
+    private String partido;
+    private boolean foiInquiridor;
+    private Microfone microfone;
+    private MediadorBase mediador;
+
+    public ColaboradorPolitico(
+        String nome,
+        String partido
+    ) {
+
+        this.nome = nome;
+
+        this.partido = partido;
+
+        this.foiInquiridor = false;
+
+        this.microfone =
+            new Microfone();
+    }
+
+    public void operacaoMediada() {
+        notificar(nome);
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setPartido(String partido) {
+        this.partido = partido;
+    }
+
+    public String getPartido() {
+        return partido;
+    }
+
+    public void setMediador(MediadorBase mediador) {
+        this.mediador = mediador;
+    }
+
+    public MediadorBase getMediador() {
+        return mediador;
+    }
+
+    public void setInquiridor(boolean valor) {
+        this.foiInquiridor = valor;
+    }
+
+    public boolean getInquiridor() {
+        return foiInquiridor;
+    }
+
+    public Microfone getMicrofone() {
+        return microfone;
+    }
+
+    public void setMicrofone(Microfone microfone) {
+        this.microfone = microfone;
+    }
+
+    @Override
+    public ColaboradorPolitico clone() {
+        ColaboradorPolitico copia =
+            new ColaboradorPolitico(nome, partido);
+
+        copia.setInquiridor(foiInquiridor);
+        copia.setMediador(mediador);
+
+        return copia;
+    }
+
+    @Override
+    public String toString() {
+        return nome + " (" + partido + ")";
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\ColaboradorPoliticoBuilder.java ====================
+package debate;
+
+public class ColaboradorPoliticoBuilder {
+
+    private String nome;
+    private String partido;
+    private boolean inquiridor;
+    private Microfone microfone;
+    private MediadorBase mediador;
+
+    public ColaboradorPoliticoBuilder nome(
+        String nome
+    ) {
+        this.nome = nome;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder partido(
+        String partido
+    ) {
+        this.partido = partido;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder inquiridor(
+        boolean valor
+    ) {
+        this.inquiridor = valor;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder microfone(
+        Microfone microfone
+    ) {
+        this.microfone = microfone;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder mediador(
+        MediadorBase mediador
+    ) {
+        this.mediador = mediador;
+        return this;
+    }
+
+    public ColaboradorPolitico build() {
+
+        ColaboradorPolitico p =
+            new ColaboradorPolitico(
+                nome,
+                partido
+            );
+
+        p.setInquiridor(
+            inquiridor
+        );
+
+        p.setMediador(
+            mediador
+        );
+
+        if (microfone != null) {
+
+            p.setMicrofone(
+                microfone
+            );
+        }
+
+        return p;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\Inquirido.java ====================
+package debate;
+
+import log.LogSistem;
+
+public class Inquirido {
+    private ColaboradorPolitico politico;
+
+    public Inquirido(ColaboradorPolitico politico) {
+        this.politico = politico;
+    }
+
+    public void responder(int tempo, LogSistem log) {
+        politico.operacaoMediada();
+        Microfone m = politico.getMicrofone();
+        m.liga();
+        log.registerLog("Resposta iniciada por " + politico.getNome());
+        m.passaTempo(tempo);
+        m.desliga();
+        log.registerLog("Tempo de resposta finalizado.");
+    }
+
+    public void treplica(int tempo, LogSistem log) {
+        politico.operacaoMediada();
+        Microfone m = politico.getMicrofone();
+        m.liga();
+        log.registerLog("Tréplica iniciada por " + politico.getNome());
+        m.passaTempo(tempo);
+        m.desliga();
+        log.registerLog("Tempo de tréplica finalizado.");
+    }
+
+    public ColaboradorPolitico getPolitico() {
+        return politico;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\Inquiridor.java ====================
+package debate;
+
+import log.LogSistem;
+
+public class Inquiridor {
+
+    private ColaboradorPolitico politico;
+
+    public Inquiridor(
+        ColaboradorPolitico politico
+    ) {
+        this.politico = politico;
+    }
+
+    public void escolhaInquirido(
+        ColaboradorPolitico p
+    ) {
+
+        MediarDebate mediador =
+            (MediarDebate) getPoliticoMediator();
+
+        mediador.setInquirido(p);
+    }
+
+    private MediadorBase getPoliticoMediator() {
+        return politico.getMediador();
+    }
+
+    public void perguntar(
+        int tempo,
+        LogSistem log
+    ) {
+
+        politico.operacaoMediada();
+
+        Microfone m =
+            politico.getMicrofone();
+
+        m.liga();
+
+        log.registerLog(
+            "Pergunta iniciada por "
+            + politico.getNome()
+        );
+
+        m.passaTempo(tempo);
+
+        m.desliga();
+
+        log.registerLog(
+            "Tempo de pergunta finalizado."
+        );
+    }
+
+    public void replica(
+        int tempo,
+        LogSistem log
+    ) {
+
+        politico.operacaoMediada();
+
+        Microfone m =
+            politico.getMicrofone();
+
+        m.liga();
+
+        log.registerLog(
+            "Réplica iniciada por "
+            + politico.getNome()
+        );
+
+        m.passaTempo(tempo);
+
+        m.desliga();
+
+        log.registerLog(
+            "Tempo de réplica finalizado."
+        );
+    }
+
+    public ColaboradorPolitico getPolitico() {
+        return politico;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\MediadorBase.java ====================
+package debate;
+
+import configuracao.ConfiguraTempo;
+import log.LogSistem;
+
+public interface MediadorBase {
+    void debate(ConfiguraTempo config, LogSistem log);
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\MediarDebate.java ====================
+package debate;
+
+import configuracao.ConfiguraTempo;
+import log.LogSistem;
+import state.GerenciadorEstadoDebate;
+
+public class MediarDebate
+implements MediadorBase {
+
+    private Inquiridor inquiridor;
+
+    private Inquirido inquirido;
+
+    private GerenciadorEstadoDebate
+        gerenciadorEstado;
+
+    public MediarDebate(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+
+        gerenciadorEstado =
+            gerenciador;
+    }
+
+    @Override
+    public void debate(
+        ConfiguraTempo config,
+        LogSistem log
+    ) {
+
+        if (
+            inquiridor == null
+            ||
+            inquirido == null
+        ) {
+
+            throw new IllegalStateException(
+                "Inquiridor ou inquirido não definidos."
+            );
+        }
+
+        log.registerLog(
+            "Início do debate."
+        );
+
+        inquiridor.perguntar(
+            config.getTempoPergunta(),
+            log
+        );
+
+        inquirido.responder(
+            config.getTempoResposta(),
+            log
+        );
+
+        inquiridor.replica(
+            config.getTempoReplica(),
+            log
+        );
+
+        inquirido.treplica(
+            config.getTempoTreplica(),
+            log
+        );
+
+        gerenciadorEstado
+            .avaliarSolicitacoes();
+
+        gerenciadorEstado
+            .executarDireitosResposta();
+
+        log.registerLog(
+            "Fim do debate."
+        );
+    }
+
+    public void avaliarDireitosResposta() {
+
+        gerenciadorEstado
+            .avaliarSolicitacoes();
+    }
+
+    public void setInquiridor(
+        ColaboradorPolitico politico
+    ) {
+
+        inquiridor =
+            new Inquiridor(
+                politico
+            );
+
+        politico
+            .getMicrofone()
+            .setGerenciadorEstado(
+                gerenciadorEstado
+            );
+    }
+
+    public Inquiridor getInquiridor() {
+
+        return inquiridor;
+    }
+
+    public void setInquirido(
+        ColaboradorPolitico politico
+    ) {
+
+        inquirido =
+            new Inquirido(
+                politico
+            );
+
+        politico
+            .getMicrofone()
+            .setGerenciadorEstado(
+                gerenciadorEstado
+            );
+    }
+
+    public Inquirido getInquirido() {
+
+        return inquirido;
+    }
+
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ){
+        gerenciadorEstado
+            .solicitarDireitoResposta(
+                politico
+            );
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\Microfone.java ====================
+package debate;
+
+import state.GerenciadorEstadoDebate;
+
+public class Microfone {
+
+    private boolean microAtivo;
+
+    private GerenciadorEstadoDebate
+        gerenciadorEstado;
+
+    public Microfone() {
+
+        microAtivo = false;
+    }
+
+    public Microfone(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+
+        microAtivo = false;
+
+        gerenciadorEstado = gerenciador;
+    }
+
+    public void setGerenciadorEstado(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+
+        gerenciadorEstado = gerenciador;
+    }
+
+    public void liga() {
+
+        microAtivo = true;
+
+        System.out.println(
+            "Microfone Ligado."
+        );
+    }
+
+    public void desliga() {
+
+        microAtivo = false;
+
+        System.out.println(
+            "Microfone Desligado."
+        );
+    }
+
+    public boolean estaAtivo() {
+
+        return microAtivo;
+    }
+
+    public void passaTempo(
+        int tempo
+    ) {
+
+        while (tempo > 0) {
+            tempo--;
+        }
+    }
+
+    public void pressionarDR(
+        ColaboradorPolitico politico
+    ) {
+
+        if (gerenciadorEstado == null) {
+
+            throw new IllegalStateException(
+                "Gerenciador de estado não configurado."
+            );
+        }
+
+        gerenciadorEstado
+            .solicitarDireitoResposta(
+                politico
+            );
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\facade\FachadaDebate.java ====================
+package facade;
+
+import configuracao.ConfiguraTempo;
+import configuracao.GerenciaPolitico;
+import debate.ColaboradorPolitico;
+import debate.Inquiridor;
+import debate.MediadorBase;
+import debate.MediarDebate;
+import log.LogSistem;
+import notificacao.Eleitor;
+import notificacao.EleitorBuilder;
+import state.GerenciadorEstadoDebate;
+
+public class FachadaDebate {
+
+    private static FachadaDebate instance;
+
+    private ConfiguraTempo config;
+
+    private MediadorBase mediador;
+
+    private GerenciaPolitico gerenciador;
+
+    private GerenciadorEstadoDebate gerenciadorEstado;
+
+    private LogSistem log;
+
+    private FachadaDebate() {
+
+        config =
+            new ConfiguraTempo();
+
+        gerenciador =
+            new GerenciaPolitico();
+
+        gerenciadorEstado =
+            new GerenciadorEstadoDebate();
+
+        mediador =
+            new MediarDebate(
+                gerenciadorEstado
+            );
+
+        log =
+            LogSistem.getInstance(
+                "log/debate.log"
+            );
+    }
+
+    public static FachadaDebate getInstance() {
+
+        if (instance == null) {
+
+            instance =
+                new FachadaDebate();
+        }
+
+        return instance;
+    }
+
+    public MediadorBase getMediador() {
+
+        return mediador;
+    }
+
+    public GerenciadorEstadoDebate
+        getGerenciadorEstado() {
+
+        return gerenciadorEstado;
+    }
+
+    public void configuracao(
+        int pergunta,
+        int resposta,
+        int replica,
+        int treplica
+    ) {
+
+        config.setTempoPergunta(
+            pergunta
+        );
+
+        config.setTempoResposta(
+            resposta
+        );
+
+        config.setTempoReplica(
+            replica
+        );
+
+        config.setTempoTreplica(
+            treplica
+        );
+
+        log.registerLog(
+            "Tempos configurados."
+        );
+    }
+
+    public void cadastrarPoliticos(
+        String nome,
+        String partido,
+        MediadorBase mediador
+    ) {
+
+        gerenciador.criarPolitico(
+            nome,
+            partido,
+            mediador
+        );
+
+        log.registerLog(
+            "Político cadastrado: "
+            + nome
+        );
+    }
+
+    public void cadastrarEleitor(
+        String nomeEleitor,
+        String email,
+        String nomePolitico
+    ) {
+
+        ColaboradorPolitico politico =
+            gerenciador
+                .obterPolitico(
+                    nomePolitico
+                );
+
+        if (politico == null) {
+
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        Eleitor eleitor =
+            new EleitorBuilder()
+                .email(email)
+                .build();
+
+        politico.adicionar(
+            eleitor
+        );
+
+        log.registerLog(
+            "Eleitor "
+            + nomeEleitor
+            + " cadastrado para "
+            + nomePolitico
+        );
+    }
+
+    public void sorteioInquiridor() {
+
+        ColaboradorPolitico sorteado =
+            gerenciador
+                .sortearPolitico();
+
+        ((MediarDebate) mediador)
+            .setInquiridor(
+                sorteado
+            );
+
+        log.registerLog(
+            "Inquiridor sorteado: "
+            + sorteado.getNome()
+        );
+    }
+
+    public void escolherInquirido(
+        String nome
+    ) {
+
+        ColaboradorPolitico escolhido =
+            gerenciador
+                .obterPolitico(
+                    nome
+                );
+
+        if (escolhido == null) {
+
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        Inquiridor inquiridor =
+            ((MediarDebate) mediador)
+                .getInquiridor();
+
+        if (inquiridor == null) {
+
+            throw new IllegalStateException(
+                "Nenhum inquiridor foi sorteado."
+            );
+        }
+
+        if (
+            inquiridor
+                .getPolitico()
+                .equals(escolhido)
+        ) {
+
+            throw new IllegalArgumentException(
+                "O inquiridor não pode escolher a si mesmo."
+            );
+        }
+
+        inquiridor.escolhaInquirido(
+            escolhido
+        );
+
+        log.registerLog(
+            "Inquirido escolhido: "
+            + escolhido.getNome()
+        );
+    }
+
+    public void executaDebate() {
+
+        mediador.debate(
+            config,
+            log
+        );
+    }
+
+    public void solicitarDR(
+        String nomePolitico
+    ) {
+
+        ColaboradorPolitico politico =
+            gerenciador
+                .obterPolitico(
+                    nomePolitico
+                );
+
+        if (politico == null) {
+
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        politico
+            .getMicrofone()
+            .pressionarDR(
+                politico
+            );
+    }
+
+    public ColaboradorPolitico getPolitico(
+        String nome
+    ) {
+
+        return gerenciador
+            .obterPolitico(
+                nome
+            );
+    }
+
+    public ColaboradorPolitico getPoliticoInquiridor() {
+
+        Inquiridor inquiridor =
+            ((MediarDebate) mediador)
+                .getInquiridor();
+
+        if (inquiridor == null) {
+
+            return null;
+        }
+
+        return inquiridor
+            .getPolitico();
+    }
+
+    public void acessarLog() {
+
+        System.out.println(
+            log.getLogsRegister()
+        );
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\log\LogSistem.java ====================
+package log;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+public class LogSistem {
+    private static LogSistem instance;
+    private String filePath;
+
+    private LogSistem(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public static LogSistem getInstance(String filePath) {
+        if (instance == null) {
+            instance = new LogSistem(filePath);
+        }
+        return instance;
+    }
+
+    public void registerLog(String msg) {
+        try {
+            Path path = Path.of(filePath);
+            Files.createDirectories(path.getParent());
+            Files.writeString(
+                path,
+                msg + System.lineSeparator(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getLogsRegister() {
+        try {
+            Path path = Path.of(filePath);
+            if (!Files.exists(path)) return "";
+            return Files.readString(path);
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\Eleitor.java ====================
+package notificacao;
+
+import prototype.Prototype;
+
+public class Eleitor implements Observador, Prototype {
+
+    private String email;
+
+    public Eleitor(String email) {
+        this.email = email;
+    }
+
+    @Override
+    public void atualizar(String candidato) {
+        System.out.println(
+            "Eleitor " +
+            email +
+            " recebeu atualização: " +
+            candidato +
+            " está falando"
+        );
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    @Override
+    public Eleitor clone() {
+        return new Eleitor(email);
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\EleitorBuilder.Java ====================
+package notificacao;
+
+public class EleitorBuilder {
+
+    private String email;
+
+    public EleitorBuilder email(String email) {
+        this.email = email;
+        return this;
+    }
+
+    public Eleitor build() {
+        return new Eleitor(email);
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\Observador.java ====================
+package notificacao;
+
+public interface Observador {
+    void atualizar(String candidato);
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\Sujeito.java ====================
+package notificacao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Sujeito {
+    private List<Observador> observadores = new ArrayList<>();
+
+    public void adicionar(Observador o) {
+        observadores.add(o);
+    }
+
+    public void remover(Observador o) {
+        observadores.remove(o);
+    }
+
+    public void notificar(String candidato) {
+        for (Observador o : observadores) {
+            o.atualizar(candidato);
+        }
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\prototype\Prototype.java ====================
+package prototype;
+
+public interface Prototype {
+    Object clone();
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoAnaliseDR.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public class EstadoAnaliseDR
+implements EstadoDebate {
+
+    private GerenciadorEstadoDebate
+        gerenciador;
+
+    public EstadoAnaliseDR(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+        this.gerenciador = gerenciador;
+    }
+
+    @Override
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        gerenciador
+            .registrarSolicitacao(
+                politico
+            );
+    }
+    
+    @Override
+    public void finalizarEtapa() {
+
+        gerenciador
+            .executarDireitosResposta();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoDebate.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public interface EstadoDebate {
+
+    void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    );
+
+    void finalizarEtapa();
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoDebateNormal.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public class EstadoDebateNormal
+implements EstadoDebate {
+
+    private GerenciadorEstadoDebate
+        gerenciador;
+
+    public EstadoDebateNormal(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+        this.gerenciador = gerenciador;
+    }
+
+    @Override
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        gerenciador
+            .registrarSolicitacao(
+                politico
+            );
+    }
+
+    @Override
+    public void finalizarEtapa() {
+
+        gerenciador
+            .avaliarSolicitacoes();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoExecucaoDR.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public class EstadoExecucaoDR
+implements EstadoDebate {
+
+    private GerenciadorEstadoDebate
+        gerenciador;
+
+    public EstadoExecucaoDR(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+        this.gerenciador = gerenciador;
+    }
+
+    @Override
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        System.out.println(
+            "Não é permitido solicitar DR durante a execução dos Direitos de Resposta."
+        );
+    }
+
+    @Override
+    public void finalizarEtapa() {
+
+        gerenciador
+            .retornarFluxoNormal();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\GerenciadorEstadoDebate.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+import debate.Microfone;
+import log.LogSistem;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Scanner;
+
+public class GerenciadorEstadoDebate {
+
+    private EstadoDebate estadoAtual;
+
+    private Queue<SolicitacaoDR>
+        filaSolicitacoes =
+            new LinkedList<>();
+
+    private int contadorSolicitacoes = 0;
+
+    public GerenciadorEstadoDebate() {
+
+        estadoAtual =
+            new EstadoDebateNormal(this);
+    }
+
+    public void setEstado(
+        EstadoDebate estado
+    ) {
+
+        estadoAtual = estado;
+    }
+
+    public EstadoDebate getEstado() {
+
+        return estadoAtual;
+    }
+
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        estadoAtual
+            .solicitarDireitoResposta(
+                politico
+            );
+    }
+
+    public void registrarSolicitacao(
+        ColaboradorPolitico politico
+    ) {
+
+        for (SolicitacaoDR s : filaSolicitacoes) {
+
+            if (
+                s.getPolitico()
+                .equals(politico)
+            ) {
+
+                System.out.println(
+                    politico.getNome()
+                    + " já solicitou Direito de Resposta."
+                );
+
+                return;
+            }
+        }
+
+        SolicitacaoDR solicitacao =
+            new SolicitacaoDR(
+                politico,
+                ++contadorSolicitacoes
+            );
+
+        filaSolicitacoes.add(
+            solicitacao
+        );
+
+        System.out.println(
+            politico.getNome()
+            + " solicitou Direito de Resposta."
+        );
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                politico.getNome()
+                + " solicitou Direito de Resposta."
+            );
+    }
+
+    public void avaliarSolicitacoes() {
+
+        if (
+            filaSolicitacoes.isEmpty()
+        ) {
+
+            return;
+        }
+
+        setEstado(
+            new EstadoAnaliseDR(this)
+        );
+    }
+
+    public void aprovarSolicitacao(
+        SolicitacaoDR s
+    ) {
+
+        s.setConcedido(true);
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Direito de Resposta APROVADO para "
+                + s.getPolitico().getNome()
+            );
+    }
+
+    public void rejeitarSolicitacao(
+        SolicitacaoDR s
+    ) {
+
+        s.setConcedido(false);
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Direito de Resposta REJEITADO para "
+                + s.getPolitico().getNome()
+            );
+    }
+
+    public void concederDireitoResposta(
+        SolicitacaoDR s
+    ) {
+
+        ColaboradorPolitico politico =
+            s.getPolitico();
+
+        System.out.println(
+            "\nDireito de Resposta concedido para "
+            + politico.getNome()
+        );
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Início do Direito de Resposta de "
+                + politico.getNome()
+            );
+
+        politico.operacaoMediada();
+
+        Microfone microfone =
+            politico.getMicrofone();
+
+        microfone.liga();
+
+        microfone.passaTempo(60);
+
+        microfone.desliga();
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Fim do Direito de Resposta de "
+                + politico.getNome()
+            );
+    }
+
+    public void executarDireitosResposta() {
+
+        if (
+            filaSolicitacoes.isEmpty()
+        ) {
+
+            retornarFluxoNormal();
+
+            return;
+        }
+
+        setEstado(
+            new EstadoExecucaoDR(this)
+        );
+
+        Scanner scanner =
+            new Scanner(System.in);
+
+        while (
+            !filaSolicitacoes.isEmpty()
+        ) {
+
+            SolicitacaoDR s =
+                filaSolicitacoes.poll();
+
+            System.out.println();
+
+            System.out.println(
+                "Solicitação de DR de "
+                + s.getPolitico()
+                    .getNome()
+            );
+
+            System.out.print(
+                "Conceder DR? (s/n): "
+            );
+
+            String resposta =
+                scanner.nextLine();
+
+            if (
+                resposta.equalsIgnoreCase(
+                    "s"
+                )
+            ) {
+
+                aprovarSolicitacao(s);
+
+                concederDireitoResposta(
+                    s
+                );
+            }
+
+            else {
+
+                rejeitarSolicitacao(
+                    s
+                );
+
+                System.out.println(
+                    "DR rejeitado."
+                );
+            }
+        }
+
+        retornarFluxoNormal();
+    }
+
+    public void retornarFluxoNormal() {
+
+        setEstado(
+            new EstadoDebateNormal(
+                this
+            )
+        );
+    }
+
+    public Queue<SolicitacaoDR>
+        getFilaSolicitacoes() {
+
+        return filaSolicitacoes;
+    }
+
+    public void finalizarEtapa() {
+
+        estadoAtual.finalizarEtapa();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\Main.java ====================
+import usuario.CLI;
+
+public class Main {
+    public static void main(String[] args) {
+        CLI cli = new CLI();
+        cli.realizarOperacao();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\configuracao\ConfiguraTempo.java ====================
+package configuracao;
+
+import prototype.Prototype;
+
+public class ConfiguraTempo implements Prototype {
+
+    private int tempoPergunta;
+    private int tempoResposta;
+    private int tempoReplica;
+    private int tempoTreplica;
+
+    public ConfiguraTempo() {
+        tempoPergunta = 120;
+        tempoResposta = 90;
+        tempoReplica = 60;
+        tempoTreplica = 60;
+    }
+
+    public void setTempoPergunta(int t) {
+        tempoPergunta = t;
+    }
+
+    public int getTempoPergunta() {
+        return tempoPergunta;
+    }
+
+    public void setTempoResposta(int t) {
+        tempoResposta = t;
+    }
+
+    public int getTempoResposta() {
+        return tempoResposta;
+    }
+
+    public void setTempoReplica(int t) {
+        tempoReplica = t;
+    }
+
+    public int getTempoReplica() {
+        return tempoReplica;
+    }
+
+    public void setTempoTreplica(int t) {
+        tempoTreplica = t;
+    }
+
+    public int getTempoTreplica() {
+        return tempoTreplica;
+    }
+
+    @Override
+    public ConfiguraTempo clone() {
+
+        ConfiguraTempo copia =
+            new ConfiguraTempo();
+
+        copia.setTempoPergunta(tempoPergunta);
+        copia.setTempoResposta(tempoResposta);
+        copia.setTempoReplica(tempoReplica);
+        copia.setTempoTreplica(tempoTreplica);
+
+        return copia;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\configuracao\ConfiguraTempoBuilder.java ====================
+package configuracao;
+
+public class ConfiguraTempoBuilder {
+
+    private int tempoPergunta;
+    private int tempoResposta;
+    private int tempoReplica;
+    private int tempoTreplica;
+
+    public ConfiguraTempoBuilder tempoPergunta(int tempo) {
+        this.tempoPergunta = tempo;
+        return this;
+    }
+
+    public ConfiguraTempoBuilder tempoResposta(int tempo) {
+        this.tempoResposta = tempo;
+        return this;
+    }
+
+    public ConfiguraTempoBuilder tempoReplica(int tempo) {
+        this.tempoReplica = tempo;
+        return this;
+    }
+
+    public ConfiguraTempoBuilder tempoTreplica(int tempo) {
+        this.tempoTreplica = tempo;
+        return this;
+    }
+
+    public ConfiguraTempo build() {
+
+        ConfiguraTempo c = new ConfiguraTempo();
+
+        c.setTempoPergunta(tempoPergunta);
+        c.setTempoResposta(tempoResposta);
+        c.setTempoReplica(tempoReplica);
+        c.setTempoTreplica(tempoTreplica);
+
+        return c;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\configuracao\GerenciaPolitico.java ====================
+package configuracao;
+
+import debate.ColaboradorPolitico;
+import debate.ColaboradorPoliticoBuilder;
+import debate.MediadorBase;
+import notificacao.Eleitor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class GerenciaPolitico {
+
+    private List<ColaboradorPolitico> politicos = new ArrayList<>();
+    private int quantPoliticos = 0;
+
+    public void criarPolitico(
+        String nome,
+        String partido,
+        MediadorBase mediador
+    ) {
+
+        ColaboradorPolitico novo =
+            new ColaboradorPoliticoBuilder()
+                .nome(nome)
+                .partido(partido)
+                .mediador(mediador)
+                .build();
+
+        politicos.add(novo);
+        quantPoliticos++;
+    }
+
+    public void adicionarEleitor(
+        String nome,
+        String partido,
+        Eleitor eleitor
+    ) {
+
+        ColaboradorPolitico p = obterPolitico(nome);
+
+        if (p == null) {
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        p.adicionar(eleitor);
+    }
+
+    public ColaboradorPolitico obterPolitico(String nome) {
+
+        for (ColaboradorPolitico p : politicos) {
+            if (p.getNome().equals(nome)) {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    public ColaboradorPolitico sortearPolitico() {
+
+        if (politicos.isEmpty()) {
+            throw new IllegalStateException(
+                "Nenhum político cadastrado."
+            );
+        }
+
+        List<ColaboradorPolitico> disponiveis =
+            new ArrayList<>();
+
+        for (ColaboradorPolitico p : politicos) {
+            if (!p.getInquiridor()) {
+                disponiveis.add(p);
+            }
+        }
+
+        if (disponiveis.isEmpty()) {
+            throw new IllegalStateException(
+                "Todos os políticos já foram inquiridores."
+            );
+        }
+
+        Random random = new Random();
+
+        ColaboradorPolitico escolhido =
+            disponiveis.get(
+                random.nextInt(disponiveis.size())
+            );
+
+        escolhido.setInquiridor(true);
+
+        return escolhido;
+    }
+
+    public int getQuantPoliticos() {
+        return quantPoliticos;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\ColaboradorPolitico.java ====================
+package debate;
+
+import notificacao.Sujeito;
+import prototype.Prototype;
+
+public class ColaboradorPolitico extends Sujeito implements Prototype {
+
+    private String nome;
+    private String partido;
+    private boolean foiInquiridor;
+    private Microfone microfone;
+    private MediadorBase mediador;
+
+    public ColaboradorPolitico(
+        String nome,
+        String partido
+    ) {
+
+        this.nome = nome;
+
+        this.partido = partido;
+
+        this.foiInquiridor = false;
+
+        this.microfone =
+            new Microfone();
+    }
+
+    public void operacaoMediada() {
+        notificar(nome);
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setPartido(String partido) {
+        this.partido = partido;
+    }
+
+    public String getPartido() {
+        return partido;
+    }
+
+    public void setMediador(MediadorBase mediador) {
+        this.mediador = mediador;
+    }
+
+    public MediadorBase getMediador() {
+        return mediador;
+    }
+
+    public void setInquiridor(boolean valor) {
+        this.foiInquiridor = valor;
+    }
+
+    public boolean getInquiridor() {
+        return foiInquiridor;
+    }
+
+    public Microfone getMicrofone() {
+        return microfone;
+    }
+
+    public void setMicrofone(Microfone microfone) {
+        this.microfone = microfone;
+    }
+
+    @Override
+    public ColaboradorPolitico clone() {
+        ColaboradorPolitico copia =
+            new ColaboradorPolitico(nome, partido);
+
+        copia.setInquiridor(foiInquiridor);
+        copia.setMediador(mediador);
+
+        return copia;
+    }
+
+    @Override
+    public String toString() {
+        return nome + " (" + partido + ")";
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\ColaboradorPoliticoBuilder.java ====================
+package debate;
+
+public class ColaboradorPoliticoBuilder {
+
+    private String nome;
+    private String partido;
+    private boolean inquiridor;
+    private Microfone microfone;
+    private MediadorBase mediador;
+
+    public ColaboradorPoliticoBuilder nome(
+        String nome
+    ) {
+        this.nome = nome;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder partido(
+        String partido
+    ) {
+        this.partido = partido;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder inquiridor(
+        boolean valor
+    ) {
+        this.inquiridor = valor;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder microfone(
+        Microfone microfone
+    ) {
+        this.microfone = microfone;
+        return this;
+    }
+
+    public ColaboradorPoliticoBuilder mediador(
+        MediadorBase mediador
+    ) {
+        this.mediador = mediador;
+        return this;
+    }
+
+    public ColaboradorPolitico build() {
+
+        ColaboradorPolitico p =
+            new ColaboradorPolitico(
+                nome,
+                partido
+            );
+
+        p.setInquiridor(
+            inquiridor
+        );
+
+        p.setMediador(
+            mediador
+        );
+
+        if (microfone != null) {
+
+            p.setMicrofone(
+                microfone
+            );
+        }
+
+        return p;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\Inquirido.java ====================
+package debate;
+
+import log.LogSistem;
+
+public class Inquirido {
+    private ColaboradorPolitico politico;
+
+    public Inquirido(ColaboradorPolitico politico) {
+        this.politico = politico;
+    }
+
+    public void responder(int tempo, LogSistem log) {
+        politico.operacaoMediada();
+        Microfone m = politico.getMicrofone();
+        m.liga();
+        log.registerLog("Resposta iniciada por " + politico.getNome());
+        m.passaTempo(tempo);
+        m.desliga();
+        log.registerLog("Tempo de resposta finalizado.");
+    }
+
+    public void treplica(int tempo, LogSistem log) {
+        politico.operacaoMediada();
+        Microfone m = politico.getMicrofone();
+        m.liga();
+        log.registerLog("Tréplica iniciada por " + politico.getNome());
+        m.passaTempo(tempo);
+        m.desliga();
+        log.registerLog("Tempo de tréplica finalizado.");
+    }
+
+    public ColaboradorPolitico getPolitico() {
+        return politico;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\Inquiridor.java ====================
+package debate;
+
+import log.LogSistem;
+
+public class Inquiridor {
+
+    private ColaboradorPolitico politico;
+
+    public Inquiridor(
+        ColaboradorPolitico politico
+    ) {
+        this.politico = politico;
+    }
+
+    public void escolhaInquirido(
+        ColaboradorPolitico p
+    ) {
+
+        MediarDebate mediador =
+            (MediarDebate) getPoliticoMediator();
+
+        mediador.setInquirido(p);
+    }
+
+    private MediadorBase getPoliticoMediator() {
+        return politico.getMediador();
+    }
+
+    public void perguntar(
+        int tempo,
+        LogSistem log
+    ) {
+
+        politico.operacaoMediada();
+
+        Microfone m =
+            politico.getMicrofone();
+
+        m.liga();
+
+        log.registerLog(
+            "Pergunta iniciada por "
+            + politico.getNome()
+        );
+
+        m.passaTempo(tempo);
+
+        m.desliga();
+
+        log.registerLog(
+            "Tempo de pergunta finalizado."
+        );
+    }
+
+    public void replica(
+        int tempo,
+        LogSistem log
+    ) {
+
+        politico.operacaoMediada();
+
+        Microfone m =
+            politico.getMicrofone();
+
+        m.liga();
+
+        log.registerLog(
+            "Réplica iniciada por "
+            + politico.getNome()
+        );
+
+        m.passaTempo(tempo);
+
+        m.desliga();
+
+        log.registerLog(
+            "Tempo de réplica finalizado."
+        );
+    }
+
+    public ColaboradorPolitico getPolitico() {
+        return politico;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\MediadorBase.java ====================
+package debate;
+
+import configuracao.ConfiguraTempo;
+import log.LogSistem;
+
+public interface MediadorBase {
+    void debate(ConfiguraTempo config, LogSistem log);
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\MediarDebate.java ====================
+package debate;
+
+import configuracao.ConfiguraTempo;
+import log.LogSistem;
+import state.GerenciadorEstadoDebate;
+
+public class MediarDebate
+implements MediadorBase {
+
+    private Inquiridor inquiridor;
+
+    private Inquirido inquirido;
+
+    private GerenciadorEstadoDebate
+        gerenciadorEstado;
+
+    public MediarDebate(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+
+        gerenciadorEstado =
+            gerenciador;
+    }
+
+    @Override
+    public void debate(
+        ConfiguraTempo config,
+        LogSistem log
+    ) {
+
+        if (
+            inquiridor == null
+            ||
+            inquirido == null
+        ) {
+
+            throw new IllegalStateException(
+                "Inquiridor ou inquirido não definidos."
+            );
+        }
+
+        log.registerLog(
+            "Início do debate."
+        );
+
+        inquiridor.perguntar(
+            config.getTempoPergunta(),
+            log
+        );
+
+        inquirido.responder(
+            config.getTempoResposta(),
+            log
+        );
+
+        inquiridor.replica(
+            config.getTempoReplica(),
+            log
+        );
+
+        inquirido.treplica(
+            config.getTempoTreplica(),
+            log
+        );
+
+        gerenciadorEstado
+            .avaliarSolicitacoes();
+
+        gerenciadorEstado
+            .executarDireitosResposta();
+
+        log.registerLog(
+            "Fim do debate."
+        );
+    }
+
+    public void avaliarDireitosResposta() {
+
+        gerenciadorEstado
+            .avaliarSolicitacoes();
+    }
+
+    public void setInquiridor(
+        ColaboradorPolitico politico
+    ) {
+
+        inquiridor =
+            new Inquiridor(
+                politico
+            );
+
+        politico
+            .getMicrofone()
+            .setGerenciadorEstado(
+                gerenciadorEstado
+            );
+    }
+
+    public Inquiridor getInquiridor() {
+
+        return inquiridor;
+    }
+
+    public void setInquirido(
+        ColaboradorPolitico politico
+    ) {
+
+        inquirido =
+            new Inquirido(
+                politico
+            );
+
+        politico
+            .getMicrofone()
+            .setGerenciadorEstado(
+                gerenciadorEstado
+            );
+    }
+
+    public Inquirido getInquirido() {
+
+        return inquirido;
+    }
+
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ){
+        gerenciadorEstado
+            .solicitarDireitoResposta(
+                politico
+            );
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\debate\Microfone.java ====================
+package debate;
+
+import state.GerenciadorEstadoDebate;
+
+public class Microfone {
+
+    private boolean microAtivo;
+
+    private GerenciadorEstadoDebate
+        gerenciadorEstado;
+
+    public Microfone() {
+
+        microAtivo = false;
+    }
+
+    public Microfone(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+
+        microAtivo = false;
+
+        gerenciadorEstado = gerenciador;
+    }
+
+    public void setGerenciadorEstado(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+
+        gerenciadorEstado = gerenciador;
+    }
+
+    public void liga() {
+
+        microAtivo = true;
+
+        System.out.println(
+            "Microfone Ligado."
+        );
+    }
+
+    public void desliga() {
+
+        microAtivo = false;
+
+        System.out.println(
+            "Microfone Desligado."
+        );
+    }
+
+    public boolean estaAtivo() {
+
+        return microAtivo;
+    }
+
+    public void passaTempo(
+        int tempo
+    ) {
+
+        while (tempo > 0) {
+            tempo--;
+        }
+    }
+
+    public void pressionarDR(
+        ColaboradorPolitico politico
+    ) {
+
+        if (gerenciadorEstado == null) {
+
+            throw new IllegalStateException(
+                "Gerenciador de estado não configurado."
+            );
+        }
+
+        gerenciadorEstado
+            .solicitarDireitoResposta(
+                politico
+            );
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\facade\FachadaDebate.java ====================
+package facade;
+
+import configuracao.ConfiguraTempo;
+import configuracao.GerenciaPolitico;
+import debate.ColaboradorPolitico;
+import debate.Inquiridor;
+import debate.MediadorBase;
+import debate.MediarDebate;
+import log.LogSistem;
+import notificacao.Eleitor;
+import notificacao.EleitorBuilder;
+import state.GerenciadorEstadoDebate;
+
+public class FachadaDebate {
+
+    private static FachadaDebate instance;
+
+    private ConfiguraTempo config;
+
+    private MediadorBase mediador;
+
+    private GerenciaPolitico gerenciador;
+
+    private GerenciadorEstadoDebate gerenciadorEstado;
+
+    private LogSistem log;
+
+    private FachadaDebate() {
+
+        config =
+            new ConfiguraTempo();
+
+        gerenciador =
+            new GerenciaPolitico();
+
+        gerenciadorEstado =
+            new GerenciadorEstadoDebate();
+
+        mediador =
+            new MediarDebate(
+                gerenciadorEstado
+            );
+
+        log =
+            LogSistem.getInstance(
+                "log/debate.log"
+            );
+    }
+
+    public static FachadaDebate getInstance() {
+
+        if (instance == null) {
+
+            instance =
+                new FachadaDebate();
+        }
+
+        return instance;
+    }
+
+    public MediadorBase getMediador() {
+
+        return mediador;
+    }
+
+    public GerenciadorEstadoDebate
+        getGerenciadorEstado() {
+
+        return gerenciadorEstado;
+    }
+
+    public void configuracao(
+        int pergunta,
+        int resposta,
+        int replica,
+        int treplica
+    ) {
+
+        config.setTempoPergunta(
+            pergunta
+        );
+
+        config.setTempoResposta(
+            resposta
+        );
+
+        config.setTempoReplica(
+            replica
+        );
+
+        config.setTempoTreplica(
+            treplica
+        );
+
+        log.registerLog(
+            "Tempos configurados."
+        );
+    }
+
+    public void cadastrarPoliticos(
+        String nome,
+        String partido,
+        MediadorBase mediador
+    ) {
+
+        gerenciador.criarPolitico(
+            nome,
+            partido,
+            mediador
+        );
+
+        log.registerLog(
+            "Político cadastrado: "
+            + nome
+        );
+    }
+
+    public void cadastrarEleitor(
+        String nomeEleitor,
+        String email,
+        String nomePolitico
+    ) {
+
+        ColaboradorPolitico politico =
+            gerenciador
+                .obterPolitico(
+                    nomePolitico
+                );
+
+        if (politico == null) {
+
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        Eleitor eleitor =
+            new EleitorBuilder()
+                .email(email)
+                .build();
+
+        politico.adicionar(
+            eleitor
+        );
+
+        log.registerLog(
+            "Eleitor "
+            + nomeEleitor
+            + " cadastrado para "
+            + nomePolitico
+        );
+    }
+
+    public void sorteioInquiridor() {
+
+        ColaboradorPolitico sorteado =
+            gerenciador
+                .sortearPolitico();
+
+        ((MediarDebate) mediador)
+            .setInquiridor(
+                sorteado
+            );
+
+        log.registerLog(
+            "Inquiridor sorteado: "
+            + sorteado.getNome()
+        );
+    }
+
+    public void escolherInquirido(
+        String nome
+    ) {
+
+        ColaboradorPolitico escolhido =
+            gerenciador
+                .obterPolitico(
+                    nome
+                );
+
+        if (escolhido == null) {
+
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        Inquiridor inquiridor =
+            ((MediarDebate) mediador)
+                .getInquiridor();
+
+        if (inquiridor == null) {
+
+            throw new IllegalStateException(
+                "Nenhum inquiridor foi sorteado."
+            );
+        }
+
+        if (
+            inquiridor
+                .getPolitico()
+                .equals(escolhido)
+        ) {
+
+            throw new IllegalArgumentException(
+                "O inquiridor não pode escolher a si mesmo."
+            );
+        }
+
+        inquiridor.escolhaInquirido(
+            escolhido
+        );
+
+        log.registerLog(
+            "Inquirido escolhido: "
+            + escolhido.getNome()
+        );
+    }
+
+    public void executaDebate() {
+
+        mediador.debate(
+            config,
+            log
+        );
+    }
+
+    public void solicitarDR(
+        String nomePolitico
+    ) {
+
+        ColaboradorPolitico politico =
+            gerenciador
+                .obterPolitico(
+                    nomePolitico
+                );
+
+        if (politico == null) {
+
+            throw new IllegalArgumentException(
+                "Político não encontrado."
+            );
+        }
+
+        politico
+            .getMicrofone()
+            .pressionarDR(
+                politico
+            );
+    }
+
+    public ColaboradorPolitico getPolitico(
+        String nome
+    ) {
+
+        return gerenciador
+            .obterPolitico(
+                nome
+            );
+    }
+
+    public ColaboradorPolitico getPoliticoInquiridor() {
+
+        Inquiridor inquiridor =
+            ((MediarDebate) mediador)
+                .getInquiridor();
+
+        if (inquiridor == null) {
+
+            return null;
+        }
+
+        return inquiridor
+            .getPolitico();
+    }
+
+    public void acessarLog() {
+
+        System.out.println(
+            log.getLogsRegister()
+        );
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\log\LogSistem.java ====================
+package log;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+public class LogSistem {
+    private static LogSistem instance;
+    private String filePath;
+
+    private LogSistem(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public static LogSistem getInstance(String filePath) {
+        if (instance == null) {
+            instance = new LogSistem(filePath);
+        }
+        return instance;
+    }
+
+    public void registerLog(String msg) {
+        try {
+            Path path = Path.of(filePath);
+            Files.createDirectories(path.getParent());
+            Files.writeString(
+                path,
+                msg + System.lineSeparator(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getLogsRegister() {
+        try {
+            Path path = Path.of(filePath);
+            if (!Files.exists(path)) return "";
+            return Files.readString(path);
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\Eleitor.java ====================
+package notificacao;
+
+import prototype.Prototype;
+
+public class Eleitor implements Observador, Prototype {
+
+    private String email;
+
+    public Eleitor(String email) {
+        this.email = email;
+    }
+
+    @Override
+    public void atualizar(String candidato) {
+        System.out.println(
+            "Eleitor " +
+            email +
+            " recebeu atualização: " +
+            candidato +
+            " está falando"
+        );
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    @Override
+    public Eleitor clone() {
+        return new Eleitor(email);
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\EleitorBuilder.Java ====================
+package notificacao;
+
+public class EleitorBuilder {
+
+    private String email;
+
+    public EleitorBuilder email(String email) {
+        this.email = email;
+        return this;
+    }
+
+    public Eleitor build() {
+        return new Eleitor(email);
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\Observador.java ====================
+package notificacao;
+
+public interface Observador {
+    void atualizar(String candidato);
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\notificacao\Sujeito.java ====================
+package notificacao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Sujeito {
+    private List<Observador> observadores = new ArrayList<>();
+
+    public void adicionar(Observador o) {
+        observadores.add(o);
+    }
+
+    public void remover(Observador o) {
+        observadores.remove(o);
+    }
+
+    public void notificar(String candidato) {
+        for (Observador o : observadores) {
+            o.atualizar(candidato);
+        }
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\prototype\Prototype.java ====================
+package prototype;
+
+public interface Prototype {
+    Object clone();
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoAnaliseDR.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public class EstadoAnaliseDR
+implements EstadoDebate {
+
+    private GerenciadorEstadoDebate
+        gerenciador;
+
+    public EstadoAnaliseDR(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+        this.gerenciador = gerenciador;
+    }
+
+    @Override
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        gerenciador
+            .registrarSolicitacao(
+                politico
+            );
+    }
+    
+    @Override
+    public void finalizarEtapa() {
+
+        gerenciador
+            .executarDireitosResposta();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoDebate.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public interface EstadoDebate {
+
+    void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    );
+
+    void finalizarEtapa();
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoDebateNormal.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public class EstadoDebateNormal
+implements EstadoDebate {
+
+    private GerenciadorEstadoDebate
+        gerenciador;
+
+    public EstadoDebateNormal(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+        this.gerenciador = gerenciador;
+    }
+
+    @Override
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        gerenciador
+            .registrarSolicitacao(
+                politico
+            );
+    }
+
+    @Override
+    public void finalizarEtapa() {
+
+        gerenciador
+            .avaliarSolicitacoes();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\EstadoExecucaoDR.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+
+public class EstadoExecucaoDR
+implements EstadoDebate {
+
+    private GerenciadorEstadoDebate
+        gerenciador;
+
+    public EstadoExecucaoDR(
+        GerenciadorEstadoDebate gerenciador
+    ) {
+        this.gerenciador = gerenciador;
+    }
+
+    @Override
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        System.out.println(
+            "Não é permitido solicitar DR durante a execução dos Direitos de Resposta."
+        );
+    }
+
+    @Override
+    public void finalizarEtapa() {
+
+        gerenciador
+            .retornarFluxoNormal();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\GerenciadorEstadoDebate.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+import debate.Microfone;
+import log.LogSistem;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Scanner;
+
+public class GerenciadorEstadoDebate {
+
+    private EstadoDebate estadoAtual;
+
+    private Queue<SolicitacaoDR>
+        filaSolicitacoes =
+            new LinkedList<>();
+
+    private int contadorSolicitacoes = 0;
+
+    public GerenciadorEstadoDebate() {
+
+        estadoAtual =
+            new EstadoDebateNormal(this);
+    }
+
+    public void setEstado(
+        EstadoDebate estado
+    ) {
+
+        estadoAtual = estado;
+    }
+
+    public EstadoDebate getEstado() {
+
+        return estadoAtual;
+    }
+
+    public void solicitarDireitoResposta(
+        ColaboradorPolitico politico
+    ) {
+
+        estadoAtual
+            .solicitarDireitoResposta(
+                politico
+            );
+    }
+
+    public void registrarSolicitacao(
+        ColaboradorPolitico politico
+    ) {
+
+        for (SolicitacaoDR s : filaSolicitacoes) {
+
+            if (
+                s.getPolitico()
+                .equals(politico)
+            ) {
+
+                System.out.println(
+                    politico.getNome()
+                    + " já solicitou Direito de Resposta."
+                );
+
+                return;
+            }
+        }
+
+        SolicitacaoDR solicitacao =
+            new SolicitacaoDR(
+                politico,
+                ++contadorSolicitacoes
+            );
+
+        filaSolicitacoes.add(
+            solicitacao
+        );
+
+        System.out.println(
+            politico.getNome()
+            + " solicitou Direito de Resposta."
+        );
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                politico.getNome()
+                + " solicitou Direito de Resposta."
+            );
+    }
+
+    public void avaliarSolicitacoes() {
+
+        if (
+            filaSolicitacoes.isEmpty()
+        ) {
+
+            return;
+        }
+
+        setEstado(
+            new EstadoAnaliseDR(this)
+        );
+    }
+
+    public void aprovarSolicitacao(
+        SolicitacaoDR s
+    ) {
+
+        s.setConcedido(true);
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Direito de Resposta APROVADO para "
+                + s.getPolitico().getNome()
+            );
+    }
+
+    public void rejeitarSolicitacao(
+        SolicitacaoDR s
+    ) {
+
+        s.setConcedido(false);
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Direito de Resposta REJEITADO para "
+                + s.getPolitico().getNome()
+            );
+    }
+
+    public void concederDireitoResposta(
+        SolicitacaoDR s
+    ) {
+
+        ColaboradorPolitico politico =
+            s.getPolitico();
+
+        System.out.println(
+            "\nDireito de Resposta concedido para "
+            + politico.getNome()
+        );
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Início do Direito de Resposta de "
+                + politico.getNome()
+            );
+
+        politico.operacaoMediada();
+
+        Microfone microfone =
+            politico.getMicrofone();
+
+        microfone.liga();
+
+        microfone.passaTempo(60);
+
+        microfone.desliga();
+
+        LogSistem
+            .getInstance("log/debate.log")
+            .registerLog(
+                "Fim do Direito de Resposta de "
+                + politico.getNome()
+            );
+    }
+
+    public void executarDireitosResposta() {
+
+        if (
+            filaSolicitacoes.isEmpty()
+        ) {
+
+            retornarFluxoNormal();
+
+            return;
+        }
+
+        setEstado(
+            new EstadoExecucaoDR(this)
+        );
+
+        Scanner scanner =
+            new Scanner(System.in);
+
+        while (
+            !filaSolicitacoes.isEmpty()
+        ) {
+
+            SolicitacaoDR s =
+                filaSolicitacoes.poll();
+
+            System.out.println();
+
+            System.out.println(
+                "Solicitação de DR de "
+                + s.getPolitico()
+                    .getNome()
+            );
+
+            System.out.print(
+                "Conceder DR? (s/n): "
+            );
+
+            String resposta =
+                scanner.nextLine();
+
+            if (
+                resposta.equalsIgnoreCase(
+                    "s"
+                )
+            ) {
+
+                aprovarSolicitacao(s);
+
+                concederDireitoResposta(
+                    s
+                );
+            }
+
+            else {
+
+                rejeitarSolicitacao(
+                    s
+                );
+
+                System.out.println(
+                    "DR rejeitado."
+                );
+            }
+        }
+
+        retornarFluxoNormal();
+    }
+
+    public void retornarFluxoNormal() {
+
+        setEstado(
+            new EstadoDebateNormal(
+                this
+            )
+        );
+    }
+
+    public Queue<SolicitacaoDR>
+        getFilaSolicitacoes() {
+
+        return filaSolicitacoes;
+    }
+
+    public void finalizarEtapa() {
+
+        estadoAtual.finalizarEtapa();
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\state\SolicitacaoDR.java ====================
+package state;
+
+import debate.ColaboradorPolitico;
+import java.time.LocalDateTime;
+
+public class SolicitacaoDR {
+
+    private ColaboradorPolitico politico;
+    private boolean concedido;
+    private int ordem;
+    private LocalDateTime instanteSolicitacao;
+
+    public SolicitacaoDR(
+        ColaboradorPolitico politico,
+        int ordem
+    ) {
+        this.politico = politico;
+        this.ordem = ordem;
+        this.concedido = false;
+        this.instanteSolicitacao =
+            LocalDateTime.now();
+    }
+
+    public void setConcedido(
+        boolean valor
+    ) {
+        concedido = valor;
+    }
+
+    public boolean getConcedido() {
+        return concedido;
+    }
+
+    public ColaboradorPolitico getPolitico() {
+        return politico;
+    }
+
+    public int getOrdem() {
+        return ordem;
+    }
+
+    public LocalDateTime getInstanteSolicitacao() {
+        return instanteSolicitacao;
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\usuario\CLI.java ====================
+package usuario;
+
+import java.util.Scanner;
+
+import debate.ColaboradorPolitico;
+import facade.FachadaDebate;
+
+public class CLI {
+    private FachadaDebate f;
+    private Scanner scanner;
+
+    public CLI() {
+        f = FachadaDebate.getInstance();
+        scanner = new Scanner(System.in);
+    }
+
+    public void realizarOperacao() {
+        int opcao;
+
+        do {
+            exibirMenu();
+            opcao = lerInteiro("Escolha uma opção: ");
+
+            try {
+                switch (opcao) {
+                    case 1:
+                        configurarTempos();
+                        break;
+
+                    case 2:
+                        cadastrarPolitico();
+                        break;
+
+                    case 3:
+                        cadastrarEleitor();
+                        break;
+                        
+                    case 4:
+                        sortearInquiridor();
+                        break;
+
+                    case 5:
+                        escolherInquirido();
+                        break;
+
+                    case 6:
+                        executarDebate();
+                        break;
+
+                    case 7:
+                        mostrarInquiridor();
+                        break;
+
+                    case 8:
+                        visualizarLog();
+                        break;
+
+                    case 9:
+                        solicitarDR();
+                        break;
+
+                    case 0:
+                        System.out.println("Encerrando o sistema...");
+                        break;
+
+                    default:
+                        System.out.println("Opção inválida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Erro: " + e.getMessage());
+            }
+
+            System.out.println();
+        } while (opcao != 0);
+
+        scanner.close();
+    }
+
+    private void exibirMenu() {
+        System.out.println("======================================");
+        System.out.println("      SISTEMA DE DEBATE POLÍTICO");
+        System.out.println("======================================");
+        System.out.println("1 - Configurar tempos");
+        System.out.println("2 - Cadastrar político");
+        System.out.println("3 - Cadastrar eleitor");
+        System.out.println("4 - Sortear inquiridor");
+        System.out.println("5 - Escolher inquirido");
+        System.out.println("6 - Executar debate");
+        System.out.println("7 - Mostrar inquiridor atual");
+        System.out.println("8 - Visualizar log");
+        System.out.println("9 - Solicitar Direito de Resposta");
+        System.out.println("0 - Sair");
+        System.out.println("======================================");
+    }
+
+    private void configurarTempos() {
+        System.out.println("\n--- Configuração de Tempos ---");
+
+        int pergunta = lerInteiro("Tempo da pergunta (segundos): ");
+        int resposta = lerInteiro("Tempo da resposta (segundos): ");
+        int replica = lerInteiro("Tempo da réplica (segundos): ");
+        int treplica = lerInteiro("Tempo da tréplica (segundos): ");
+
+        f.configuracao(pergunta, resposta, replica, treplica);
+
+        System.out.println("Tempos configurados com sucesso.");
+    }
+
+    private void cadastrarPolitico() {
+        System.out.println("\n--- Cadastro de Político ---");
+
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+
+        System.out.print("Partido: ");
+        String partido = scanner.nextLine();
+
+        f.cadastrarPoliticos(nome, partido, f.getMediador());
+
+        System.out.println("Político cadastrado com sucesso.");
+    }
+
+private void cadastrarEleitor() {
+    System.out.println("\n--- Cadastro de Eleitor ---");
+
+    System.out.print("Nome do eleitor: ");
+    String nomeEleitor = scanner.nextLine();
+
+    System.out.print("Email: ");
+    String email = scanner.nextLine();
+
+    System.out.print("Nome do político: ");
+    String nomePolitico = scanner.nextLine();
+
+    f.cadastrarEleitor(nomeEleitor, email, nomePolitico);
+
+    System.out.println("Eleitor cadastrado com sucesso.");
+}
+
+    private void sortearInquiridor() {
+        f.sorteioInquiridor();
+
+        ColaboradorPolitico p = f.getPoliticoInquiridor();
+
+        if (p != null) {
+            System.out.println(
+                "Inquiridor sorteado: " +
+                p.getNome() +
+                " (" +
+                p.getPartido() +
+                ")"
+            );
+        }
+    }
+
+    private void escolherInquirido() {
+        System.out.println("\n--- Escolha do Inquirido ---");
+
+        System.out.print("Nome do político: ");
+        String nome = scanner.nextLine();
+
+        f.escolherInquirido(nome);
+
+        System.out.println("Inquirido selecionado com sucesso.");
+    }
+
+    private void executarDebate() {
+
+        try {
+
+            debate.MediarDebate mediador =
+                (debate.MediarDebate)
+                    f.getMediador();
+
+            debate.Inquiridor inquiridor =
+                mediador.getInquiridor();
+
+            debate.Inquirido inquirido =
+                mediador.getInquirido();
+
+            if (
+                inquiridor == null
+                ||
+                inquirido == null
+            ) {
+
+                System.out.println(
+                    "Erro: Inquiridor ou inquirido não foram definidos."
+                );
+
+                return;
+            }
+
+            String nomeInquiridor =
+                inquiridor
+                    .getPolitico()
+                    .getNome();
+
+            String nomeInquirido =
+                inquirido
+                    .getPolitico()
+                    .getNome();
+
+            System.out.println(
+                "\n========== INÍCIO DO DEBATE ==========\n"
+            );
+
+            System.out.println(
+                nomeInquiridor
+                + " está fazendo a PERGUNTA."
+            );
+
+            inquiridor.perguntar(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                nomeInquirido
+                + " está fazendo a RESPOSTA."
+            );
+
+            inquirido.responder(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                nomeInquiridor
+                + " está fazendo a RÉPLICA."
+            );
+
+            inquiridor.replica(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                nomeInquirido
+                + " está fazendo a TRÉPLICA."
+            );
+
+            inquirido.treplica(
+                0,
+                log.LogSistem.getInstance(
+                    "log/debate.log"
+                )
+            );
+
+            verificarSolicitacoesDR();
+
+            System.out.println(
+                "\n=========== FIM DO DEBATE ==========="
+            );
+
+            System.out.println(
+                "\nAnalisando solicitações de Direito de Resposta..."
+            );
+
+            f.getGerenciadorEstado()
+                .avaliarSolicitacoes();
+
+            f.getGerenciadorEstado()
+                .executarDireitosResposta();
+
+        }
+
+        catch (Exception e) {
+
+            System.out.println(
+                "Erro: "
+                + e.getMessage()
+            );
+        }
+    }
+
+    private void mostrarInquiridor() {
+        ColaboradorPolitico p = f.getPoliticoInquiridor();
+
+        if (p == null) {
+            System.out.println("Nenhum inquiridor foi sorteado.");
+            return;
+        }
+
+        System.out.println(
+            "Inquiridor atual: " +
+            p.getNome() +
+            " (" +
+            p.getPartido() +
+            ")"
+        );
+    }
+
+    private void visualizarLog() {
+        System.out.println("\n--- LOG DO SISTEMA ---");
+        f.acessarLog();
+    }
+
+    private void solicitarDR() {
+
+        System.out.println(
+            "\n--- Solicitação de Direito de Resposta ---"
+        );
+
+        System.out.print(
+            "Nome do político: "
+        );
+
+        String nomePolitico =
+            scanner.nextLine();
+
+        f.solicitarDR(
+            nomePolitico
+        );
+
+        System.out.println(
+            "Solicitação registrada com sucesso."
+        );
+    }
+
+    private int lerInteiro(String mensagem) {
+        while (true) {
+            try {
+                System.out.print(mensagem);
+                int valor = Integer.parseInt(scanner.nextLine());
+                return valor;
+            } catch (NumberFormatException e) {
+                System.out.println("Digite um número inteiro válido.");
+            }
+        }
+    }
+
+    private void verificarSolicitacoesDR() {
+
+        while (true) {
+
+            System.out.print(
+                "\nAlguém apertou o botão DR? (ENTER = não, s = sim): "
+            );
+
+            String resposta =
+                scanner.nextLine();
+
+            if (resposta.isBlank()) {
+                break;
+            }
+
+            if (
+                resposta.equalsIgnoreCase("s")
+            ) {
+
+                System.out.print(
+                    "Nome do político: "
+                );
+
+                String nome =
+                    scanner.nextLine();
+
+                try {
+
+                    f.solicitarDR(nome);
+
+                } catch (Exception e) {
+
+                    System.out.println(
+                        "Erro: "
+                        + e.getMessage()
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+==================== C:\Users\joaoo\Documentos\Projetos\pp26_1-202411250011\DebatePolitico\usuario\GUI.java ====================
+package usuario;
+
+import facade.FachadaDebate;
+
+public class GUI {
+    private FachadaDebate f;
+
+    public GUI() {
+        f = FachadaDebate.getInstance();
+    }
+
+    public void realizarOperacao() {
+        System.out.println("Interface gráfica iniciada.");
+    }
+}
